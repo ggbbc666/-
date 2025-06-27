@@ -1,2 +1,859 @@
-# -
-报价软件
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>国防科研经费报价系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        :root {
+            --primary: #1e3c72;
+            --primary-dark: #152a57;
+            --secondary: #2a5298;
+            --accent: #4CAF50;
+            --light: #f8f9fa;
+            --border: #dee2e6;
+            --text: #333;
+            --text-light: #6c757d;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f0f5ff 0%, #e4edf5 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 25px 0;
+            margin-bottom: 30px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            border: none;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            margin-bottom: 25px;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-header {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            font-weight: 600;
+            padding: 16px 25px;
+            border-bottom: none;
+            font-size: 1.2rem;
+        }
+        
+        .card-body {
+            padding: 25px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            font-weight: 500;
+            color: var(--primary);
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .form-control, .form-select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.2);
+            outline: none;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 4px 15px rgba(30, 60, 114, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(30, 60, 114, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(to right, #2ecc71, #27ae60);
+            color: white;
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .result-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-top: 30px;
+            padding: 0;
+        }
+        
+        .result-header {
+            background: linear-gradient(to right, #2e7d32, #1b5e20);
+            color: white;
+            padding: 20px 25px;
+        }
+        
+        .result-content {
+            padding: 25px;
+        }
+        
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+        }
+        
+        .result-table th {
+            background-color: #e9f7fe;
+            color: var(--primary);
+            font-weight: 600;
+            padding: 14px 15px;
+            text-align: left;
+            border-bottom: 2px solid #d1e7f5;
+        }
+        
+        .result-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .result-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .result-table tr:nth-child(even) {
+            background-color: #f9fbfd;
+        }
+        
+        .highlight-row {
+            background-color: #e8f5e9 !important;
+            font-weight: 600;
+            color: #2e7d32;
+        }
+        
+        .total-row {
+            background: linear-gradient(to right, #e8f5e9, #d7f5d7) !important;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #1b5e20;
+        }
+        
+        .result-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .info-icon {
+            color: var(--primary);
+            margin-left: 8px;
+            cursor: help;
+        }
+        
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -15px;
+        }
+        
+        .col {
+            padding: 0 15px;
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 25px 0;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-top: 40px;
+        }
+        
+        .initial-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--text-light);
+        }
+        
+        .initial-state i {
+            font-size: 4rem;
+            color: #d1e7f5;
+            margin-bottom: 20px;
+        }
+        
+        .initial-state h3 {
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+        
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                padding: 20px 15px;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .result-actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-calculator"></i> 国防科研经费报价系统</h1>
+            <p>依据《国防科技工业科研经费管理办法》（财防〔2019〕12号）</p>
+        </div>
+        
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-edit me-2"></i> 项目基本信息
+                    </div>
+                    <div class="card-body">
+                        <div class="input-grid">
+                            <div class="form-group">
+                                <label class="form-label">项目名称 <i class="fas fa-info-circle info-icon" title="项目全称"></i></label>
+                                <input type="text" class="form-control" id="projectName" placeholder="请输入项目名称" value="新型雷达系统研制">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">项目类型 <i class="fas fa-info-circle info-icon" title="请选择项目类型"></i></label>
+                                <select class="form-select" id="projectType">
+                                    <option value="研制类">研制类</option>
+                                    <option value="技术类">技术类</option>
+                                    <option value="研究类">研究类</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">项目编号 <i class="fas fa-info-circle info-icon" title="项目唯一标识"></i></label>
+                                <input type="text" class="form-control" id="projectCode" placeholder="如：2023-DEF-001" value="2023-DEF-001">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">承担单位 <i class="fas fa-info-circle info-icon" title="项目承担单位名称"></i></label>
+                                <input type="text" class="form-control" id="organization" placeholder="请输入单位名称" value="中国电子科技集团">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">负责人 <i class="fas fa-info-circle info-icon" title="项目负责人姓名"></i></label>
+                                <input type="text" class="form-control" id="responsiblePerson" placeholder="请输入负责人姓名" value="张研究员">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">研制周期(月) <i class="fas fa-info-circle info-icon" title="项目研发周期，单位：月"></i></label>
+                                <input type="number" class="form-control" id="projectDuration" value="24" min="1">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">直接参与人数 <i class="fas fa-info-circle info-icon" title="直接参与研发的人数"></i></label>
+                                <input type="number" class="form-control" id="participants" value="15" min="1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-money-bill-wave me-2"></i> 费用明细输入
+                    </div>
+                    <div class="card-body">
+                        <div class="input-grid">
+                            <div class="form-group">
+                                <label class="form-label">材料费(万元) <i class="fas fa-info-circle info-icon" title="研究开发过程中使用的原材料、辅助材料等费用"></i></label>
+                                <input type="number" class="form-control" id="materialCost" value="100" min="0" step="0.01">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">专用费(万元) <i class="fas fa-info-circle info-icon" title="专用工具软件费、技术引进费等"></i></label>
+                                <input type="number" class="form-control" id="specialCost" value="50" min="0" step="0.01">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">外协费(万元) <i class="fas fa-info-circle info-icon" title="由外单位进行研制、研究等所需的费用"></i></label>
+                                <input type="number" class="form-control" id="outsourcingCost" value="30" min="0" step="0.01">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">燃料动力费(万元) <i class="fas fa-info-circle info-icon" title="直接消耗的水、电、气、燃料等费用"></i></label>
+                                <input type="number" class="form-control" id="fuelCost" value="20" min="0" step="0.01">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">固定资产折旧费(万元) <i class="fas fa-info-circle info-icon" title="直接用于科研活动的固定资产折旧"></i></label>
+                                <input type="number" class="form-control" id="depreciationCost" value="15" min="0" step="0.01">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">外购成品费(万元) <i class="fas fa-info-circle info-icon" title="材料费中的外购成品费用"></i></label>
+                                <input type="number" class="form-control" id="purchasedProducts" value="5" min="0" step="0.01">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-history me-2"></i> 单位历史数据
+                    </div>
+                    <div class="card-body">
+                        <div class="input-grid">
+                            <div class="form-group">
+                                <label class="form-label">工资总额1(万元) <i class="fas fa-info-circle info-icon" title="最近一年工资总额"></i></label>
+                                <input type="number" class="form-control" id="salary1" value="1200" min="0" step="0.01">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">工资总额2(万元) <i class="fas fa-info-circle info-icon" title="前年工资总额"></i></label>
+                                <input type="number" class="form-control" id="salary2" value="1300" min="0" step="0.01">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">工资总额3(万元) <i class="fas fa-info-circle info-icon" title="大前年工资总额"></i></label>
+                                <input type="number" class="form-control" id="salary3" value="1400" min="0" step="0.01">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">事业费拨款1(万元) <i class="fas fa-info-circle info-icon" title="最近一年事业费拨款"></i></label>
+                                <input type="number" class="form-control" id="funding1" value="300" min="0" step="0.01">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">事业费拨款2(万元) <i class="fas fa-info-circle info-icon" title="前年事业费拨款"></i></label>
+                                <input type="number" class="form-control" id="funding2" value="320" min="0" step="0.01">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">事业费拨款3(万元) <i class="fas fa-info-circle info-icon" title="大前年事业费拨款"></i></label>
+                                <input type="number" class="form-control" id="funding3" value="340" min="0" step="0.01">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">营业总收入1(万元) <i class="fas fa-info-circle info-icon" title="最近一年营业总收入"></i></label>
+                                <input type="number" class="form-control" id="revenue1" value="5000" min="0" step="0.01">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">营业总收入2(万元) <i class="fas fa-info-circle info-icon" title="前年营业总收入"></i></label>
+                                <input type="number" class="form-control" id="revenue2" value="5500" min="0" step="0.01">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">营业总收入3(万元) <i class="fas fa-info-circle info-icon" title="大前年营业总收入"></i></label>
+                                <input type="number" class="form-control" id="revenue3" value="6000" min="0" step="0.01">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">上年实际发放工资总额(万元) <i class="fas fa-info-circle info-icon" title="去年实际发放的工资总额"></i></label>
+                                <input type="number" class="form-control" id="lastYearSalary" value="1500" min="0" step="0.01">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">上年平均在岗职工人数 <i class="fas fa-info-circle info-icon" title="去年平均在岗职工人数"></i></label>
+                                <input type="number" class="form-control" id="lastYearStaff" value="120" min="1">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group" style="margin-top: 25px;">
+                            <button class="btn btn-primary" onclick="calculate()" style="width: 100%; padding: 14px;">
+                                <i class="fas fa-calculator me-2"></i> 计算报价
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="result-container" id="resultContainer" style="display: none;">
+            <div class="result-header">
+                <h2><i class="fas fa-file-invoice-dollar me-2"></i> 计算结果</h2>
+                <p>依据《国防科技工业科研经费管理办法》（财防〔2019〕12号）</p>
+            </div>
+            
+            <div class="result-content">
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <h3><i class="fas fa-project-diagram me-2"></i> 项目概览</h3>
+                            <div class="project-summary">
+                                <p><strong>项目名称：</strong> <span id="summaryName">-</span></p>
+                                <p><strong>项目类型：</strong> <span id="summaryType">-</span></p>
+                                <p><strong>承担单位：</strong> <span id="summaryOrg">-</span></p>
+                                <p><strong>总报价：</strong> <span class="total-value" id="totalQuote">0.00</span> 万元</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col">
+                        <div class="form-group">
+                            <h3><i class="fas fa-chart-pie me-2"></i> 费用分布</h3>
+                            <div class="cost-distribution">
+                                <p><strong>直接成本：</strong> <span id="directCost">0.00</span> 万元</p>
+                                <p><strong>间接成本：</strong> <span id="indirectCost">0.00</span> 万元</p>
+                                <p><strong>项目收益：</strong> <span id="projectProfit">0.00</span> 万元</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3 style="margin: 25px 0 15px;"><i class="fas fa-table me-2"></i> 详细费用计算</h3>
+                <div class="table-responsive">
+                    <table class="result-table">
+                        <thead>
+                            <tr>
+                                <th>费用项目</th>
+                                <th>金额(万元)</th>
+                                <th>计算依据</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultTableBody">
+                            <!-- 结果将通过JS动态填充 -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="result-actions">
+                    <button class="btn btn-success" onclick="exportToExcel()">
+                        <i class="fas fa-file-excel me-2"></i> 导出Excel
+                    </button>
+                    <button class="btn btn-outline" onclick="resetForm()">
+                        <i class="fas fa-redo me-2"></i> 重新计算
+                    </button>
+                    <button class="btn btn-outline" onclick="printResults()">
+                        <i class="fas fa-print me-2"></i> 打印结果
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="initial-state" id="initialState">
+            <i class="fas fa-calculator"></i>
+            <h3>国防科研经费计算</h3>
+            <p>填写上方表单并点击"计算报价"按钮开始</p>
+        </div>
+        
+        <div class="footer">
+            <p>国防科研经费报价系统 &copy; 2023 | 依据《国防科技工业科研经费管理办法》（财防〔2019〕12号）</p>
+            <p>本系统计算结果仅供参考，最终费用以官方审核为准</p>
+        </div>
+    </div>
+
+    <script>
+        // 计算函数
+        function calculate() {
+            // 获取输入值
+            const projectType = document.getElementById('projectType').value;
+            const projectDuration = parseFloat(document.getElementById('projectDuration').value) || 24;
+            const participants = parseFloat(document.getElementById('participants').value) || 15;
+            
+            // 费用明细
+            const materialCost = parseFloat(document.getElementById('materialCost').value) || 0;
+            const specialCost = parseFloat(document.getElementById('specialCost').value) || 0;
+            const outsourcingCost = parseFloat(document.getElementById('outsourcingCost').value) || 0;
+            const fuelCost = parseFloat(document.getElementById('fuelCost').value) || 0;
+            const depreciationCost = parseFloat(document.getElementById('depreciationCost').value) || 0;
+            const purchasedProducts = parseFloat(document.getElementById('purchasedProducts').value) || 0;
+            
+            // 单位历史数据
+            const salary1 = parseFloat(document.getElementById('salary1').value) || 0;
+            const salary2 = parseFloat(document.getElementById('salary2').value) || 0;
+            const salary3 = parseFloat(document.getElementById('salary3').value) || 0;
+            const funding1 = parseFloat(document.getElementById('funding1').value) || 0;
+            const funding2 = parseFloat(document.getElementById('funding2').value) || 0;
+            const funding3 = parseFloat(document.getElementById('funding3').value) || 0;
+            const revenue1 = parseFloat(document.getElementById('revenue1').value) || 0;
+            const revenue2 = parseFloat(document.getElementById('revenue2').value) || 0;
+            const revenue3 = parseFloat(document.getElementById('revenue3').value) || 0;
+            const lastYearSalary = parseFloat(document.getElementById('lastYearSalary').value) || 0;
+            const lastYearStaff = parseFloat(document.getElementById('lastYearStaff').value) || 1;
+            
+            // 计算工资劳务费
+            let salaryFee = 0;
+            if (projectType === "研制类" || projectType === "技术类") {
+                const numerator = (salary1 - funding1) + (salary2 - funding2) + (salary3 - funding3);
+                const denominator = (revenue1 - funding1) + (revenue2 - funding2) + (revenue3 - funding3);
+                
+                if (denominator === 0) {
+                    // 使用研究类方法计算
+                    const n = projectDuration / 12.0;
+                    const avgSalaryPerPerson = (lastYearSalary - funding1) / lastYearStaff;
+                    salaryFee = participants * n * avgSalaryPerPerson;
+                } else {
+                    const alpha = numerator / denominator;
+                    const C = materialCost + specialCost + outsourcingCost + fuelCost + depreciationCost;
+                    const k = (1.05 * alpha) / (1 - 1.05 * alpha);
+                    salaryFee = C * k;
+                }
+            } else if (projectType === "研究类") {
+                const n = projectDuration / 12.0;
+                const avgSalaryPerPerson = (lastYearSalary - funding1) / lastYearStaff;
+                salaryFee = participants * n * avgSalaryPerPerson;
+            }
+            
+            // 计算事务费
+            let transactionFee = 0;
+            if (projectType === "研制类" || projectType === "技术类") {
+                const base = materialCost + specialCost + 0.5 * outsourcingCost;
+                
+                if (base <= 50) {
+                    transactionFee = base * (projectType === "研制类" ? 0.13 : 0.18);
+                } else if (base <= 200) {
+                    transactionFee = base * (projectType === "研制类" ? 0.12 : 0.17);
+                } else if (base <= 500) {
+                    transactionFee = base * (projectType === "研制类" ? 0.11 : 0.16);
+                } else if (base <= 1000) {
+                    transactionFee = base * (projectType === "研制类" ? 0.07 : 0.13);
+                } else if (base <= 2000) {
+                    transactionFee = base * (projectType === "研制类" ? 0.065 : 0.125);
+                } else if (base <= 5000) {
+                    transactionFee = base * (projectType === "研制类" ? 0.045 : 0.085);
+                } else if (base <= 10000) {
+                    transactionFee = base * (projectType === "研制类" ? 0.04 : 0.08);
+                } else {
+                    transactionFee = base * (projectType === "研制类" ? 0.02 : 0.04);
+                }
+            } else if (projectType === "研究类") {
+                const base = materialCost + specialCost + 0.5 * outsourcingCost + salaryFee;
+                
+                if (base <= 200) {
+                    transactionFee = base * 0.35;
+                } else if (base <= 1000) {
+                    transactionFee = base * 0.30;
+                } else if (base <= 2000) {
+                    transactionFee = base * 0.28;
+                } else if (base <= 5000) {
+                    transactionFee = base * 0.24;
+                } else if (base <= 10000) {
+                    transactionFee = base * 0.20;
+                } else {
+                    transactionFee = base * 0.15;
+                }
+            }
+            
+            // 计算管理费
+            let managementFee = 0;
+            const baseCosts = materialCost + specialCost + 0.5 * outsourcingCost + fuelCost + transactionFee + depreciationCost;
+            
+            if (projectType === "研制类") {
+                managementFee = baseCosts * 0.12;
+            } else if (projectType === "技术类") {
+                managementFee = baseCosts * 0.15;
+            } else if (projectType === "研究类") {
+                managementFee = (baseCosts + salaryFee) * 0.20;
+            }
+            
+            // 计算直接成本
+            const directCosts = materialCost + specialCost + outsourcingCost + fuelCost + depreciationCost;
+            
+            // 预计成本
+            const estimatedCost = directCosts + transactionFee + managementFee + salaryFee;
+            
+            // 计算不可预见费
+            let contingencyFee = 0;
+            if (projectDuration >= 24 && estimatedCost >= 500) {
+                if (estimatedCost <= 1000) {
+                    contingencyFee = estimatedCost * 0.03;
+                } else if (estimatedCost <= 3000) {
+                    contingencyFee = estimatedCost * 0.02;
+                } else if (estimatedCost <= 10000) {
+                    contingencyFee = estimatedCost * 0.01;
+                } else {
+                    contingencyFee = estimatedCost * 0.008;
+                }
+            }
+            
+            // 总成本
+            const totalCost = estimatedCost + contingencyFee;
+            
+            // 计算项目预计收益
+            const deduction = purchasedProducts + specialCost + outsourcingCost;
+            const expectedProfit = (totalCost - deduction) * 0.05;
+            
+            // 总报价
+            const totalQuote = totalCost + expectedProfit;
+            
+            // 构建结果对象
+            const results = {
+                "材料费": materialCost,
+                "专用费": specialCost,
+                "外协费": outsourcingCost,
+                "燃料动力费": fuelCost,
+                "固定资产折旧费": depreciationCost,
+                "工资及劳务费": salaryFee,
+                "事务费": transactionFee,
+                "管理费": managementFee,
+                "不可预见费": contingencyFee,
+                "项目预计收益": expectedProfit,
+                "总成本": totalCost,
+                "总报价": totalQuote
+            };
+            
+            // 显示结果
+            displayResults(results);
+        }
+        
+        // 显示计算结果
+        function displayResults(results) {
+            const resultContainer = document.getElementById('resultContainer');
+            const initialState = document.getElementById('initialState');
+            const resultTableBody = document.getElementById('resultTableBody');
+            const totalQuote = document.getElementById('totalQuote');
+            const summaryName = document.getElementById('summaryName');
+            const summaryType = document.getElementById('summaryType');
+            const summaryOrg = document.getElementById('summaryOrg');
+            const directCost = document.getElementById('directCost');
+            const indirectCost = document.getElementById('indirectCost');
+            const projectProfit = document.getElementById('projectProfit');
+            
+            // 隐藏初始状态，显示结果
+            initialState.style.display = 'none';
+            resultContainer.style.display = 'block';
+            
+            // 更新项目概览
+            summaryName.textContent = document.getElementById('projectName').value || "未命名项目";
+            summaryType.textContent = document.getElementById('projectType').value;
+            summaryOrg.textContent = document.getElementById('organization').value || "未指定单位";
+            totalQuote.textContent = results['总报价'].toFixed(2);
+            
+            // 更新费用分布
+            directCost.textContent = (
+                results['材料费'] + 
+                results['专用费'] + 
+                results['外协费'] + 
+                results['燃料动力费'] + 
+                results['固定资产折旧费']
+            ).toFixed(2);
+            
+            indirectCost.textContent = (
+                results['工资及劳务费'] + 
+                results['事务费'] + 
+                results['管理费'] + 
+                results['不可预见费']
+            ).toFixed(2);
+            
+            projectProfit.textContent = results['项目预计收益'].toFixed(2);
+            
+            // 清空表格
+            resultTableBody.innerHTML = '';
+            
+            // 添加结果行
+            const items = [
+                {name: "材料费", basis: "直接成本项目"},
+                {name: "专用费", basis: "直接成本项目"},
+                {name: "外协费", basis: "直接成本项目"},
+                {name: "燃料动力费", basis: "直接成本项目"},
+                {name: "固定资产折旧费", basis: "直接成本项目"},
+                {name: "工资及劳务费", basis: "第二章第十七条"},
+                {name: "事务费", basis: "第二章第十四条"},
+                {name: "管理费", basis: "第二章第十六条"},
+                {name: "不可预见费", basis: "第二章第十九条"},
+                {name: "项目预计收益", basis: "第二章第二十条"},
+                {name: "总成本", basis: "汇总计算"},
+                {name: "总报价", basis: "总成本 + 项目预计收益"}
+            ];
+            
+            items.forEach(item => {
+                const row = document.createElement('tr');
+                
+                // 特殊样式处理
+                if (item.name === "总成本" || item.name === "总报价") {
+                    row.classList.add('total-row');
+                } else if (item.name === "工资及劳务费" || item.name === "事务费" || item.name === "管理费") {
+                    row.classList.add('highlight-row');
+                }
+                
+                row.innerHTML = `
+                    <td>${item.name}</td>
+                    <td>${results[item.name].toFixed(2)}</td>
+                    <td>${item.basis}</td>
+                `;
+                
+                resultTableBody.appendChild(row);
+            });
+        }
+        
+        // 导出到Excel
+        function exportToExcel() {
+            // 获取项目信息
+            const projectName = document.getElementById('projectName').value || "未命名项目";
+            const projectType = document.getElementById('projectType').value;
+            const projectCode = document.getElementById('projectCode').value || "未指定";
+            const organization = document.getElementById('organization').value || "未指定";
+            const responsiblePerson = document.getElementById('responsiblePerson').value || "未指定";
+            
+            // 创建工作簿
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('报价汇总');
+            
+            // 添加标题
+            worksheet.mergeCells('A1:C1');
+            const titleCell = worksheet.getCell('A1');
+            titleCell.value = `${projectName} - 科研经费报价单`;
+            titleCell.font = { bold: true, size: 16 };
+            titleCell.alignment = { horizontal: 'center' };
+            
+            // 添加副标题
+            worksheet.mergeCells('A2:C2');
+            const subtitleCell = worksheet.getCell('A2');
+            subtitleCell.value = "依据《国防科技工业科研经费管理办法》（财防〔2019〕12号）";
+            subtitleCell.font = { italic: true, size: 10 };
+            subtitleCell.alignment = { horizontal: 'center' };
+            
+            // 添加项目信息
+            worksheet.addRow(["项目信息", "", ""]);
+            worksheet.addRow(["项目名称", projectName, ""]);
+            worksheet.addRow(["项目类型", projectType, ""]);
+            worksheet.addRow(["项目编号", projectCode, ""]);
+            worksheet.addRow(["承担单位", organization, ""]);
+            worksheet.addRow(["负责人", responsiblePerson, ""]);
+            worksheet.addRow([]);
+            
+            // 添加费用明细标题
+            worksheet.addRow(["费用明细", "金额(万元)", "计算依据"]);
+            
+            // 获取结果数据
+            const resultRows = document.querySelectorAll('#resultTableBody tr');
+            resultRows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                worksheet.addRow([
+                    cells[0].textContent,
+                    parseFloat(cells[1].textContent),
+                    cells[2].textContent
+                ]);
+            });
+            
+            // 设置列宽
+            worksheet.columns = [
+                { width: 25 },
+                { width: 15 },
+                { width: 40 }
+            ];
+            
+            // 生成Excel文件并下载
+            workbook.xlsx.writeBuffer().then(buffer => {
+                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                saveAs(blob, `国防科研经费报价_${projectName}.xlsx`);
+            });
+        }
+        
+        // 重置表单
+        function resetForm() {
+            document.getElementById('resultContainer').style.display = 'none';
+            document.getElementById('initialState').style.display = 'block';
+        }
+        
+        // 打印结果
+        function printResults() {
+            window.print();
+        }
+        
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            // 添加示例数据
+            calculate();
+        });
+    </script>
+</body>
+</html>
